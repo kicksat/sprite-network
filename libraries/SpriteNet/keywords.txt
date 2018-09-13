@@ -1,0 +1,28 @@
+#######################################
+# Syntax Coloring Map SpriteNet
+#######################################
+
+#######################################
+# Classes (KEYWORD1)
+#######################################
+SpriteNet	KEYWORD1
+Packet	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+sendPacket	KEYWORD2
+repeatPacket	KEYWORD2
+listen	KEYWORD2
+printPacket	KEYWORD2
+txInit	KEYWORD2
+
+
+#######################################
+# Atributes (KEYWORD2)
+#######################################
+destination	KEYWORD2
+data	KEYWORD2
+dataLength	KEYWORD2
+origin	KEYWORD2
+sender	KEYWORD2
