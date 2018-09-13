@@ -88,13 +88,12 @@ void SpriteNet::sendPacket(Packet *packet) {
 	txPacket[1] = packet->origin;
 	txPacket[2] = packet->sender;
 	txPacket[3] = packet->packetID;
-	txPacket[4] = packet->dataLength;	
+	txPacket[4] = packet->dataLength;
 	for (int i = 0; i < packet->dataLength; i++) {
 		txPacket[i + 5] = packet->data[i];
 	}
 
 	unsigned char *p_txPacketLength = &(packet->packetLength);	// Pointer to length variable
-	unsigned char i = 1;					
 	Sprite.radio.writeTXBuffer(p_txPacketLength, 1);            // Write PacketLength as first byte in TX FIFO
 	Sprite.radio.writeTXBuffer(txPacket, packet->packetLength); // Write packet data to TX FIFO
 	Sprite.radio.strobe(RF_STX);                                // Set radio to transmit state
@@ -117,47 +116,68 @@ void SpriteNet::repeatPacket(Packet *packet) {
 void SpriteNet::listen(Packet *packet) {
 	Sprite.radio.strobe(RF_SRX);								// Switch Radio to recieve mode
 	unsigned char rxLength;
-	for (int i = 0; i<200; i++) {								// Repeat a number of cyles before returning to main thread 
+	for (int i = 0; i < 200; i++) {								// Repeat a number of cyles before returning to main thread 
 		delay(10);												// Delay for radio startup and listen for messages
 		rxLength = Sprite.radio.readRegister(RXBYTES);			// Check length of data in RX FIFO
 		if (rxLength != 0) {									// If message recieved (length is not zero)
-			
+
 			// Wait for packet reception to finish
+			int counter = 0;
+			bool timeout = 0;									// Recieve timeout flag
 			char status = Sprite.radio.strobe(RF_SNOP);
 			while ((status & 0xF0) == 0x10)						// Wait for packet to be recieved (While status = RX)
 			{
 				status = Sprite.radio.strobe(RF_SNOP);
-			}
-																			
-			rxLength = Sprite.radio.readRegister(RXBYTES);		// wait for more data to be recieved
-			unsigned char payload[rxLength];
-			Sprite.radio.readRXBuffer(payload, rxLength);		// Read RX FIFO
-			Sprite.radio.strobe(RF_SFRX);                       // Flush RX FIFO (not necessarily required)
-			packet->packetLength = payload[0];
-			packet->destination = payload[1];
-			packet->origin = payload[2];
-			packet->sender = payload[3];
-			packet->packetID = payload[4];
-			packet->dataLength = payload[5];
-
-			//Check if packet and data length make sense
-			if ((packet->dataLength) == (packet->packetLength - 5)) {
-				for (int i = 0; i < packet->dataLength; i++) {
-					packet->data[i] = payload[i + 6];
-					delay(1);
+				counter++;
+				delay(1);
+				// If recieve times out, set Radio to idle
+				if (counter > 1000) {
+					Sprite.radio.strobe(RF_SIDLE);				// If recieve times out, set Radio to idle
+					timeout = 1;								// Set recieve timeout flag
 				}
 			}
 
-			// If packet is corrupt and should be ignored
+			// If Recieve did not time out, process incoming packet
+			if (!timeout) {
+				rxLength = Sprite.radio.readRegister(RXBYTES);		// Read how many bytes are in rxFIFO
+				unsigned char payload[rxLength];
+				Sprite.radio.readRXBuffer(payload, rxLength);		// Read RX FIFO
+				Sprite.radio.strobe(RF_SFRX);                       // Flush RX FIFO (not necessarily required)
+				packet->packetLength = payload[0];
+				packet->destination = payload[1];
+				packet->origin = payload[2];
+				packet->sender = payload[3];
+				packet->packetID = payload[4];
+				packet->dataLength = payload[5];
+
+				//Check if packet and data length make sense
+				if ((packet->dataLength) == (packet->packetLength - 5)) {
+					for (int i = 0; i < packet->dataLength; i++) {
+						packet->data[i] = payload[i + 6];
+						delay(1);
+					}
+				}
+				// If packet is corrupt and should be ignored
+				else {
+					packet->packetLength = 0;
+					packet->dataLength = 0;
+				}
+			}
+
+			// If recieve did time out, ignore packet
 			else {
 				packet->packetLength = 0;
 				packet->dataLength = 0;
 			}
 			break;
 		}
-		else packet->dataLength = 0;
-	}
 
+		// If no packet is recieved
+		else {
+			packet->dataLength = 0;
+			packet->packetLength = 0;
+		}
+	}
 }
 
 // Prints raw packet data to serial
@@ -178,7 +198,7 @@ void SpriteNet::printPacket(Packet *packet) {
 
 	//Print packet data
 	for (int i = 0; i < packet->dataLength; i++) {
-		Serial.print(packet->data[i]);			
+		Serial.print(packet->data[i]);
 		Serial.print(" ");
 	}
 	Serial.println(" ");
