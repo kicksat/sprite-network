@@ -9,8 +9,8 @@
 
 
 // Global variables
-unsigned char address = 0x04;        // Address of this Sprite
-#define SpriteNetTXProb 300          // Probablility Spritenet will transmit
+unsigned char address = 0x01;        // Address of this Sprite
+#define SpriteNetTXProb 200          // Probablility Spritenet will transmit
 #define DownlinkProb 25              // Probability of downlink
 #define numSats 4                    // Total number of Sprites
 unsigned char sentIDs[3];            // Stores IDs for previously repeated packets
@@ -146,25 +146,31 @@ void loop() {
   // Downlink
   randNumber = random(1000);
   if(randNumber < DownlinkProb){                // compare random number against probability threshold
-    unsigned int downlinkLength = numSats*2;
-    char downlinkData[downlinkLength];
-    int2byte(packetCounter, downlinkData);      // Convert packet counter to byte array for SpriteRadio
-    spriteRadio.txInit();                                    // Switch to SpriteRadio Settings
-    digitalWrite(LED,HIGH);
-    spriteRadio.transmit(downlinkData, downlinkLength);      // Downlink Data
-    spriteNet.txInit();                                      // Return to spriteNet settings
-    
-    Serial.print("Downlinking Data: ");
-    for(unsigned char i = 0; i < downlinkLength; i++){
-      Serial.print((unsigned char)downlinkData[i],DEC);
-      Serial.print(" ");
+  
+    // Construct char array from packet counter
+    String downlinkString;
+    downlinkString = String("A: ");
+    downlinkString = String(downlinkString + address);        // Add sprite address to downlink message
+    downlinkString = String(downlinkString + " Data: ");
+    for(int i = 0; i < numSats; i++){
+      downlinkString = String(downlinkString + " " + packetCounter[i]);
     }
-    Serial.println(" ");
+    downlinkString = String(downlinkString + "\n");
+    unsigned int downlinkLength = downlinkString.length();    // Get length of string
+    char charArray[downlinkLength];                          
+    downlinkString.toCharArray(charArray, downlinkLength+1);  // Convert string to char array
+    Serial.print("Downlinking Data: \n   ");
+    Serial.println(charArray);
+    
+    // Transmit char array
+    spriteRadio.txInit();                                // Switch to SpriteRadio Settings
+    digitalWrite(LED,HIGH);
+    spriteRadio.transmit(charArray, downlinkLength);     // Downlink Data
+    spriteNet.txInit();                                  // Return to spriteNet settings
     digitalWrite(LED,LOW);
   }
-  
   Serial.println(" ");
-  blink(1,5);
+  blink(1,5);          // Blink to indicate Sprite is alive
 }
 
 
