@@ -4,49 +4,31 @@
 *
 * Author: Tane Tatum
 *
-* Last Updated: 09/12/2018
+* Last Updated: 09/17/2018
 */
-
-
-// Global variables
-unsigned char address = 0x01;        // Address of this Sprite
-#define SpriteNetTXProb 200          // Probablility Spritenet will transmit
-#define DownlinkProb 25              // Probability of downlink
-#define numSats 4                    // Total number of Sprites
-unsigned char sentIDs[3];            // Stores IDs for previously repeated packets
-unsigned int packetCounter[numSats]; // Records number of packets recieved from each Sprite
-
 
 // Included Libraries
 #include "hardwareSerial.h"
 #include "SpriteNet.h"
 #include "SpriteRadio.h"
+#include "GoldCodes.h"
 
-STORAGE nvMem;   // Create object for nonvolatile storage
+// Sprite Specific Settings
+unsigned char address = 0x01;        // Address of this Sprite
+unsigned char prn0[64] = prn2;       // prn code for 0
+unsigned char prn1[64] = prn3;       // prn code for 1
 
-unsigned char prn0[64] = {
-  0b00000001, 0b01011110, 0b11010100, 0b01100001, 0b00001011, 0b11110011, 0b00110001, 0b01011100,
-  0b01100110, 0b10010010, 0b01011011, 0b00101010, 0b11100000, 0b10100011, 0b00000000, 0b11100001,
-  0b10111011, 0b10011111, 0b00110001, 0b11001111, 0b11110111, 0b11000000, 0b10110010, 0b01110101,
-  0b10101010, 0b10100111, 0b10100101, 0b00010010, 0b00001111, 0b01011011, 0b00000010, 0b00111101,
-  0b01001110, 0b01100000, 0b10001110, 0b00010111, 0b00110100, 0b10000101, 0b01100001, 0b01000101,
-  0b00000110, 0b10100010, 0b00110110, 0b00101111, 0b10101001, 0b00011111, 0b11010111, 0b11111101,
-  0b10011101, 0b01001000, 0b00011001, 0b00011000, 0b10101111, 0b00110110, 0b10010011, 0b00000000,
-  0b00010000, 0b10000101, 0b00101000, 0b00011101, 0b01011100, 0b10101111, 0b01100100, 0b11011010
-};
+// Sprite group settings
+#define SpriteNetTXProb 200          // Probablility Spritenet will transmit
+#define DownlinkProb 50              // Probability of downlink
+#define numSats 4                    // Total number of Sprites
 
-unsigned char prn1[64] = {
-  0b11111101, 0b00111110, 0b01110111, 0b11010101, 0b00100101, 0b11101111, 0b00101100, 0b01101001,
-  0b00101010, 0b11101001, 0b00111100, 0b11000100, 0b00000111, 0b10010011, 0b11000101, 0b00000111,
-  0b00110111, 0b00011111, 0b01111011, 0b11010001, 0b10111010, 0b00000111, 0b10010000, 0b00110111,
-  0b11011111, 0b01011010, 0b11101101, 0b11001000, 0b10001100, 0b01101001, 0b10010111, 0b00101001,
-  0b10101100, 0b11011001, 0b11010110, 0b00011010, 0b11010110, 0b10101000, 0b00000101, 0b11010011,
-  0b01101010, 0b11001011, 0b11010110, 0b01010010, 0b00111111, 0b11100111, 0b10000010, 0b10000110,
-  0b01101110, 0b10011010, 0b01100101, 0b10100110, 0b00101110, 0b01010100, 0b11110100, 0b01111010,
-  0b11001011, 0b00101110, 0b01100011, 0b10111111, 0b01010100, 0b11000100, 0b11010100, 0b01010100
-};
-SpriteRadio spriteRadio(prn0, prn1);
-SpriteNet spriteNet(address);         // Initialize SpriteNet
+// Global Variables
+unsigned char sentIDs[3];            // Stores IDs for previously repeated packets
+unsigned int packetCounter[numSats]; // Records number of packets recieved from each Sprite
+STORAGE nvMem;                       // Instantiate object for nonvolatile memory
+SpriteRadio spriteRadio(prn0, prn1); // Instantiate spriteRadio
+SpriteNet spriteNet(address);        // Instantiate spriteNet
 
 
 /////////// SETUP FUNCTION ///////////
@@ -62,9 +44,11 @@ void setup() {
   unsigned char byte_packetCounter[sizeof(packetCounter)];
   nvMem.read(byte_packetCounter, INFOMEM_SECTION_D, 0x00, sizeof(packetCounter));  // Read Old value
   byte2int(byte_packetCounter, packetCounter);  
+  // Allow for nvMem reset by quicly reseting Sprite twice
   nvMem.write(0, INFOMEM_SECTION_D, 0x00, sizeof(packetCounter));                  // Reset persitent value to 0
-  delay(500);    // Allow time to reset and erase nonvolatile memory
-  nvMem.write(byte_packetCounter, INFOMEM_SECTION_D, 0x00, sizeof(packetCounter));                  // Reset persitent value to 0
+  delay(500);                                                                      // Allow time to reset
+  nvMem.write(byte_packetCounter, INFOMEM_SECTION_D, 0x00, sizeof(packetCounter)); // Reset persitent value to 0
+  
   // Print Packet Counter
   Serial.print("Packet Counter: ");
       for(int i = 0; i < numSats; i++){
@@ -79,23 +63,25 @@ void setup() {
 void loop() {
   // Check random number comparator for transmitting
   long randNumber = random(1000);
-  if(randNumber < SpriteNetTXProb){                // compare random number against probability threshold
+  if(randNumber < SpriteNetTXProb){  // compare random number against probability threshold
     // Transmit random data
     unsigned char txData[1];
-    txData[0] = randomByte();  // Data to transmit
+    txData[0] = randomByte();        // Data to transmit
     Packet txPacket;
     Packet *p_txPacket = &txPacket;
-    txPacket.destination = 0x00;
+    txPacket.destination = 0x00;     // Destinatin of packet (0x00 for general broadcast)
     txPacket.origin = address;
     txPacket.sender = address;
     txPacket.data = txData;
     txPacket.dataLength = 1;
     spriteNet.sendPacket(p_txPacket);
+    blink(2, 200);
+    
+    // Print Transmitted packet to serial
     Serial.print("Transmit ");
     spriteNet.printPacket(&txPacket);
     Serial.print("TX Data:  ");
     Serial.println(txPacket.data[0]);
-    blink(2, 200);
   }
   
   // Listen for packet  
@@ -104,12 +90,14 @@ void loop() {
   rxPacket.data = rxData; 
   Packet *p_rxPacket = &rxPacket;
   spriteNet.listen(p_rxPacket);
-  if(rxPacket.dataLength > 0){            // If packet recieved
+  if(rxPacket.dataLength > 0){    // If packet recieved
+    blink(4,50);                  // Strobe to indicate packet recieved
+    
+    // Print recieved packet to serial
     Serial.print("Recieved ");
     spriteNet.printPacket(p_rxPacket);
     Serial.print("RX Data: ");
     Serial.println(rxPacket.data[0]);
-    blink(4,50);
     
     // Check if recieved packet is new
     bool duplicate = IDmatch(rxPacket.packetID, sentIDs);       // True if ID of current packet is in sentIDs array
@@ -119,8 +107,9 @@ void loop() {
       packetCounter[satIndex] = packetCounter[satIndex]++;      // Update packet counter
       unsigned char byte_packetCounter[sizeof(packetCounter)];
       int2byte(packetCounter, byte_packetCounter);              //Convert integer array to byte array
-      //nvMem.write(byte_packetCounter, INFOMEM_SECTION_D, 0x00 , sizeof(packetCounter));  // Update nonvolatile memory
       nvMem.write(&byte_packetCounter[satIndex*2], INFOMEM_SECTION_D, satIndex*2 , 2);  // Update nonvolatile memory
+      
+      // Print packet counter to Serial
       Serial.print("Packet Counter: ");
       for(int i = 0; i < numSats; i++){
         Serial.print(packetCounter[i]);
@@ -137,6 +126,8 @@ void loop() {
         Packet repPacket = rxPacket;
         repPacket.sender = address;
         Packet *p_repPacket = &repPacket;
+        
+        // Print repeated packet to Serial
         Serial.print("Repeated ");
         spriteNet.printPacket(p_repPacket);
       }
@@ -147,7 +138,7 @@ void loop() {
   randNumber = random(1000);
   if(randNumber < DownlinkProb){                // compare random number against probability threshold
   
-    // Construct char array from packet counter
+    // Construct char array to downlink from packet counter
     String downlinkString;
     downlinkString = String("A: ");
     downlinkString = String(downlinkString + address);        // Add sprite address to downlink message
@@ -159,15 +150,17 @@ void loop() {
     unsigned int downlinkLength = downlinkString.length();    // Get length of string
     char charArray[downlinkLength];                          
     downlinkString.toCharArray(charArray, downlinkLength+1);  // Convert string to char array
-    Serial.print("Downlinking Data: \n   ");
-    Serial.println(charArray);
-    
+        
     // Transmit char array
     spriteRadio.txInit();                                // Switch to SpriteRadio Settings
     digitalWrite(LED,HIGH);
     spriteRadio.transmit(charArray, downlinkLength);     // Downlink Data
     spriteNet.txInit();                                  // Return to spriteNet settings
     digitalWrite(LED,LOW);
+    
+    // Print Downlinked Data to serial
+    Serial.print("Downlinked Data: \n   ");
+    Serial.println(charArray);
   }
   Serial.println(" ");
   blink(1,5);          // Blink to indicate Sprite is alive
