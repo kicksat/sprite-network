@@ -8,7 +8,7 @@
 */
 
 // Included Libraries
-#include "hardwareSerial.h"
+#include "HardwareSerial.h"
 #include "SpriteNet.h"
 #include "SpriteRadio.h"
 #include "GoldCodes.h"

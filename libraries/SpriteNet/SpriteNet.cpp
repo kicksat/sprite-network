@@ -9,7 +9,7 @@
 #include "SpriteNet.h"
 #include "sprite.h"
 #include "cc430radio.h"
-#include "hardwareSerial.h"
+#include "HardwareSerial.h"
 
 //Initialize Packet Structure
 Packet::Packet() {
