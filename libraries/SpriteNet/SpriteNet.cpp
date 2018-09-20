@@ -134,6 +134,7 @@ void SpriteNet::listen(Packet *packet) {
 				if (counter > 1000) {
 					Sprite.radio.strobe(RF_SIDLE);				// If recieve times out, set Radio to idle
 					timeout = 1;								// Set recieve timeout flag
+					break;
 				}
 			}
 
