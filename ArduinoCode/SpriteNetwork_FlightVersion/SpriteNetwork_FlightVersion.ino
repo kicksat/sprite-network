@@ -14,14 +14,14 @@
 #include "GoldCodes.h"
 
 // Sprite Specific Settings
-unsigned char address = 0x01;        // Address of this Sprite
-unsigned char prn0[64] = prn2;       // prn code for 0
-unsigned char prn1[64] = prn3;       // prn code for 1
+unsigned char address = 0x10;        // Address of this Sprite
+unsigned char prn0[64]= prn20;       // prn code for 0
+unsigned char prn1[64]= prn21;       // prn code for 1
 
 // Sprite group settings
-#define SpriteNetTXProb 200          // Probablility Spritenet will transmit (prob=x/1000)
+#define SpriteNetTXProb 100          // Probablility Spritenet will transmit (prob=x/1000)
 #define DownlinkProb 25              // Probability of downlink (prob=x/1000)
-#define numSats 4                    // Total number of Sprites
+#define numSats 12                    // Total number of Sprites
 
 // Global Variables
 unsigned char sentIDs[3];            // tStores IDs for previously repeated packets
@@ -33,7 +33,9 @@ SpriteNet spriteNet(address);        // Instantiate spriteNet
 
 /////////// SETUP FUNCTION ///////////
 void setup() {
+  blink(3,50);
   spriteNet.txInit();          // Set SpriteNet radio settings
+  spriteRadio.setPower(1);
   
   pinMode(LED, OUTPUT);        // Set LED pin to output
   pinMode(A0, INPUT);          // Set floating pin to input
@@ -46,10 +48,10 @@ void setup() {
   byte2int(byte_packetCounter, packetCounter); 
   
   // Allow for nvMem reset by quicly reseting Sprite twice
-  nvMem.write(0, INFOMEM_SECTION_D, 0x00, sizeof(packetCounter));                  // Reset persitent value to 0
-  delay(500);                                                                      // Allow time to reset
-  nvMem.write(byte_packetCounter, INFOMEM_SECTION_D, 0x00, sizeof(packetCounter)); // Reset persitent value to 0
-  
+//  nvMem.write(0, INFOMEM_SECTION_D, 0x00, sizeof(packetCounter));                  // Reset persitent value to 0
+//  delay(500);                                                                      // Allow time to reset
+//  nvMem.write(byte_packetCounter, INFOMEM_SECTION_D, 0x00, sizeof(packetCounter)); // Reset persitent value to 0
+//  
 //  // Print Packet Counter
 //  Serial.print("Packet Counter: ");
 //      for(int i = 0; i < numSats; i++){

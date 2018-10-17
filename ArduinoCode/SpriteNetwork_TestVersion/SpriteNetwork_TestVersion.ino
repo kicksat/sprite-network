@@ -14,12 +14,12 @@
 #include "GoldCodes.h"
 
 // Sprite Specific Settings
-unsigned char address = 0x01;        // Address of this Sprite
-unsigned char prn0[64] = prn2;       // prn code for 0
-unsigned char prn1[64] = prn3;       // prn code for 1
+unsigned char address = 0x07;        // Address of this Sprite
+unsigned char prn0[64] = prn14;       // prn code for 0
+unsigned char prn1[64] = prn15;       // prn code for 1
 
 // Sprite group settings
-#define SpriteNetTXProb 200          // Probablility Spritenet will transmit
+#define SpriteNetTXProb 600          // Probablility Spritenet will transmit
 #define DownlinkProb 50              // Probability of downlink
 #define numSats 4                    // Total number of Sprites
 
@@ -39,6 +39,7 @@ void setup() {
   pinMode(A0, INPUT);          // Set floating pin to input
   randomSeed(analogRead(A0));  // Seed random number generator
   Serial.begin(4800);          // Start Serial
+  Serial.println("RESET");
   
   // Retrieve number of packets recieved from nonvolatile memory
   unsigned char byte_packetCounter[sizeof(packetCounter)];
