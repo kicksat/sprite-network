@@ -77,6 +77,7 @@ SpriteNet::SpriteNet(unsigned char address) {
 	_address = address;
 	_settings = SpriteNetSettings;
 	_power = 0xC9;							// Transmit power setting (0xC0 for max power, 0x50 for mid power, 0x12 for min power)
+											// (0xC0=10dBm, 0xC3=9dBm, 0xC6=8dBm, 0xC9=7dBm, 0x82=6dBm)
 }
 
 void SpriteNet::sendPacket(Packet *packet) {

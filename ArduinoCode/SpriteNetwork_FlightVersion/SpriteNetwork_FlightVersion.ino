@@ -14,14 +14,14 @@
 #include "GoldCodes.h"
 
 // Sprite Specific Settings
-unsigned char address = 0x10;        // Address of this Sprite
+unsigned char address = 10;          // Address of this Sprite (start with 1)
 unsigned char prn0[64]= prn20;       // prn code for 0
 unsigned char prn1[64]= prn21;       // prn code for 1
 
 // Sprite group settings
 #define SpriteNetTXProb 100          // Probablility Spritenet will transmit (prob=x/1000)
 #define DownlinkProb 25              // Probability of downlink (prob=x/1000)
-#define numSats 12                    // Total number of Sprites
+#define numSats 12                   // Total number of Sprites
 
 // Global Variables
 unsigned char sentIDs[3];            // tStores IDs for previously repeated packets
