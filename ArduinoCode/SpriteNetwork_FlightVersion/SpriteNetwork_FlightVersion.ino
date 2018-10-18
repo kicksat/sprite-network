@@ -35,7 +35,7 @@ SpriteNet spriteNet(address);        // Instantiate spriteNet
 void setup() {
   blink(3,50);
   spriteNet.txInit();          // Set SpriteNet radio settings
-  spriteRadio.setPower(1);
+  spriteRadio.setPower(7);     // Set SpriteRadio TX Power
   
   pinMode(LED, OUTPUT);        // Set LED pin to output
   pinMode(A0, INPUT);          // Set floating pin to input
