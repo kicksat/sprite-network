@@ -14,9 +14,9 @@
 #include "GoldCodes.h"
 
 // Sprite Specific Settings
-unsigned char address = 10;          // Address of this Sprite (start with 1)
-unsigned char prn0[64]= prn20;       // prn code for 0
-unsigned char prn1[64]= prn21;       // prn code for 1
+unsigned char address = 6;          // Address of this Sprite (start with 1)
+unsigned char prn0[64]= prn12;       // prn code for 0
+unsigned char prn1[64]= prn13;       // prn code for 1
 
 // Sprite group settings
 #define SpriteNetTXProb 100          // Probablility Spritenet will transmit (prob=x/1000)
@@ -33,9 +33,9 @@ SpriteNet spriteNet(address);        // Instantiate spriteNet
 
 /////////// SETUP FUNCTION ///////////
 void setup() {
-  blink(3,50);
+  //blink(3,50);
   spriteNet.txInit();          // Set SpriteNet radio settings
-  spriteRadio.setPower(7);     // Set SpriteRadio TX Power
+  spriteRadio.setPower(6);     // Set SpriteRadio TX Power
   
   pinMode(LED, OUTPUT);        // Set LED pin to output
   pinMode(A0, INPUT);          // Set floating pin to input
@@ -78,7 +78,7 @@ void loop() {
     txPacket.data = txData;
     txPacket.dataLength = 1;
     spriteNet.sendPacket(p_txPacket);
-    blink(2, 200);
+    //blink(2, 200);
     
 //    // Print Transmitted packet to serial
 //    Serial.print("Transmit ");
@@ -94,7 +94,7 @@ void loop() {
   Packet *p_rxPacket = &rxPacket;
   spriteNet.listen(p_rxPacket);
   if(rxPacket.dataLength > 0){    // If packet recieved
-    blink(4,50);                  // Strobe to indicate packet recieved
+    //blink(4,50);                  // Strobe to indicate packet recieved
     
 //    // Print recieved packet to serial
 //    Serial.print("Recieved ");
@@ -123,7 +123,7 @@ void loop() {
       //Repeat packet if needed
       if((rxPacket.destination != address) && (rxPacket.origin != address)){
         spriteNet.repeatPacket(p_rxPacket);
-        blink(1, 300);
+        //blink(1, 300);
       
         //Only necessary for accurate serial printout
         Packet repPacket = rxPacket;
@@ -143,7 +143,7 @@ void loop() {
   
     // Construct char array to downlink from packet counter
     String downlinkString;
-    //downlinkString = String("A: ");
+    downlinkString = String("!");
     //downlinkString = String(downlinkString + address);        // Add sprite address to downlink message
     //downlinkString = String(downlinkString + " Data: ");
     for(int i = 0; i < numSats; i++){
@@ -156,17 +156,17 @@ void loop() {
         
     // Transmit char array
     spriteRadio.txInit();                                // Switch to SpriteRadio Settings
-    digitalWrite(LED,HIGH);
+    //digitalWrite(LED,HIGH);
     spriteRadio.transmit(charArray, downlinkLength);     // Downlink Data
     spriteNet.txInit();                                  // Return to spriteNet settings
-    digitalWrite(LED,LOW);
+    //digitalWrite(LED,LOW);
     
 //    // Print Downlinked Data to serial
 //    Serial.print("Downlinked Data: \n   ");
 //    Serial.println(charArray);
   }
 //  Serial.println(" ");
-  blink(1,5);          // Blink to indicate Sprite is alive
+  //blink(1,5);          // Blink to indicate Sprite is alive
 }
 
 
@@ -206,10 +206,10 @@ void updateIDs(unsigned char ID, unsigned char *sentIDs){
 // Blinks LED a specified number of times
 void blink(int num){
   for(int i = 0; i < num; i++){
-    digitalWrite(LED, HIGH);
-    delay(100);
-    digitalWrite(LED,LOW);
-    delay(100);
+    //digitalWrite(LED, HIGH);
+    //delay(100);
+    //digitalWrite(LED,LOW);
+    //delay(100);
   }
 }
 
